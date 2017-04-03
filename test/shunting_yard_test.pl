@@ -10,6 +10,9 @@ test(to_postfix_addition) :-
 test(to_postfix_addition_with_multiplication) :-
   to_postfix("3 + 4 * 5", "3 4 5 * +").
 
+test(to_postfix_addition_and_mult_with_parens) :-
+  to_postfix("( 3 + 4 ) * 5", "3 4 + 5 *").
+
 :- end_tests(to_postfix).
 
 :- begin_tests(tokenize).
