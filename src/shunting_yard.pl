@@ -40,33 +40,44 @@ associativity("-", left).
 shunt(Tokens, OutTokens) :-
   shunt_(Tokens, [], [], OutTokens), !.
 
+shunt_(Tokens, OutTokensRev, Stack, OutTokens) :-
+  reverse(OutTokensRev, OutTokensOrd),
+  writeln(""),
+  detokenize(["In:   "|Tokens], TokensPrint),
+  detokenize(["Out:  "|OutTokensOrd], OutTokensPrint),
+  detokenize(["Stack:"|Stack], StackPrint),
+  writeln(TokensPrint),
+  writeln(OutTokensPrint),
+  writeln(StackPrint),
+  shunt__(Tokens, OutTokensRev, Stack, OutTokens).
+
 % the output queue gets built reversed cos it's easier to use [H|T], so
 % reverse it once done
-shunt_([], OutTokensRev, [], OutTokens) :-
+shunt__([], OutTokensRev, [], OutTokens) :-
   reverse(OutTokensRev, OutTokens).
 
 % Input finished - pop the opstack onto the output queue
-shunt_([], Acc, [H|T], OutTokens) :-
+shunt__([], Acc, [H|T], OutTokens) :-
   shunt_([], [H|Acc], T, OutTokens).
 
 % First token is a number - place on the output queue
-shunt_([NA|T], Acc, Stack, OutTokens) :-
+shunt__([NA|T], Acc, Stack, OutTokens) :-
   atom_number(NA, _),
   shunt_(T, [NA|Acc], Stack, OutTokens).
 
 % First token is an operator, opstack is empty
-shunt_([Op1|T], Acc, [], OutTokens) :-
+shunt__([Op1|T], Acc, [], OutTokens) :-
   operator(Op1),
   shunt_(T, Acc, [Op1], OutTokens).
 
 % First token is an operator, head of opstack isn't op (parenthesis?)
-shunt_([Op1|T], Acc, [HStack|TStack], OutTokens) :-
+shunt__([Op1|T], Acc, [HStack|TStack], OutTokens) :-
   operator(Op1),
   \+ operator(HStack),
   shunt_(T, Acc, [Op1,HStack|TStack], OutTokens).
 
 % First token is an operator, head of stack is operator
-shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
+shunt__([Op1|T], Acc, [Op2|TStack], OutTokens) :-
   operator(Op1),
   operator(Op2),
   associativity(Op1, Assoc),
@@ -75,33 +86,33 @@ shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
   shunt_ops_([Op1|T], Assoc, POp1, POp2, Acc, [Op2|TStack], OutTokens).
 
 % First token is a left parenthesis
-shunt_(["("|T], Acc, Stack, OutTokens) :-
+shunt__(["("|T], Acc, Stack, OutTokens) :-
   !,
   shunt_(T, Acc, ["("|Stack], OutTokens).
 
 % First token is a right parenthesis, head of opstack is left parenthesis
-shunt_([")"|T], Acc, ["("|TStack], OutTokens) :-
+shunt__([")"|T], Acc, ["("|TStack], OutTokens) :-
   !,
   shunt_(T, Acc, TStack, OutTokens).
 
 % First token is a right parenthesis, head of opstack not left parenthesis
-shunt_([")"|T], Acc, [Op|TStack], OutTokens) :-
+shunt__([")"|T], Acc, [Op|TStack], OutTokens) :-
   !,
   shunt_([")"|T], [Op|Acc], TStack, OutTokens).
 
 % First token is a function
-shunt_([F|T], Acc, Stack, OutTokens) :-
+shunt__([F|T], Acc, Stack, OutTokens) :-
   function(F),
   !,
   shunt_(T, Acc, [F|Stack], OutTokens).
 
 % First token is a function separator, top of stack is left paren
-shunt_([","|T], Acc, ["("|TStack], OutTokens) :-
+shunt__([","|T], Acc, ["("|TStack], OutTokens) :-
   !,
   shunt_(T, Acc, ["("|TStack], OutTokens).
 
 % First token is a function separator, top of stack is not left paren
-shunt_([","|T], Acc, [HStack|TStack], OutTokens) :-
+shunt__([","|T], Acc, [HStack|TStack], OutTokens) :-
   HStack \= "(",
   !,
   shunt_([","|T], [HStack|Acc], TStack, OutTokens).
