@@ -16,6 +16,9 @@ test(to_postfix_addition_and_mult_with_parens) :-
 test(to_postfix_with_all_the_math) :-
   to_postfix("3 + 4 * 2 / ( 1 - 5 ) ^ 2 ^ 3", "3 4 2 * 1 5 - 2 3 ^ ^ / +").
 
+test(to_postfix_with_functions) :-
+  to_postfix("sin ( max ( 2 , 3 ) / 3 * 3.1415 )", "2 3 max 3 / 3.1415 * sin").
+
 :- end_tests(to_postfix).
 
 :- begin_tests(tokenize).

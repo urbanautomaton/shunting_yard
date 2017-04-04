@@ -15,6 +15,9 @@ detokenize([HToken|TTokens], String) :-
   string_concat(HToken, " ", HString),
   string_concat(HString, TString, String).
 
+function("sin").
+function("max").
+
 operator("^").
 operator("*").
 operator("/").
@@ -72,15 +75,35 @@ shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
 
 % First token is a left parenthesis
 shunt_(["("|T], Acc, Stack, OutTokens) :-
+  !,
   shunt_(T, Acc, ["("|Stack], OutTokens).
 
 % First token is a right parenthesis, head of opstack is left parenthesis
 shunt_([")"|T], Acc, ["("|TStack], OutTokens) :-
+  !,
   shunt_(T, Acc, TStack, OutTokens).
 
 % First token is a right parenthesis, head of opstack not left parenthesis
 shunt_([")"|T], Acc, [Op|TStack], OutTokens) :-
+  !,
   shunt_([")"|T], [Op|Acc], TStack, OutTokens).
+
+% First token is a function
+shunt_([F|T], Acc, Stack, OutTokens) :-
+  function(F),
+  !,
+  shunt_(T, Acc, [F|Stack], OutTokens).
+
+% First token is a function separator, top of stack is left paren
+shunt_([","|T], Acc, ["("|TStack], OutTokens) :-
+  !,
+  shunt_(T, Acc, ["("|TStack], OutTokens).
+
+% First token is a function separator, top of stack is not left paren
+shunt_([","|T], Acc, [HStack|TStack], OutTokens) :-
+  HStack \= "(",
+  !,
+  shunt_([","|T], [HStack|Acc], TStack, OutTokens).
 
 % first token is left-associative, lower or equal precedence
 shunt_ops_([Op1|T], left, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
