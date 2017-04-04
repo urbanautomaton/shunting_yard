@@ -61,30 +61,14 @@ shunt_([Op1|T], Acc, [HStack|TStack], OutTokens) :-
   \+ operator(HStack),
   shunt_(T, Acc, [Op1,HStack|TStack], OutTokens).
 
-% First token is an operator, left associative with lower or equal precedence
-% to head of opstack
+% First token is an operator, head of stack is operator
 shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
-  associativity(Op1, left),
+  operator(Op1),
+  operator(Op2),
+  associativity(Op1, Assoc),
   precedence(Op1, POp1),
   precedence(Op2, POp2),
-  POp1 =< POp2,
-  shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
-
-% First token is an operator, right associative with lower precedence than
-% head of opstack
-shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
-  associativity(Op1, right),
-  precedence(Op1, POp1),
-  precedence(Op2, POp2),
-  POp1 < POp2,
-  shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
-
-% First token is an operator with greater precedence than head of opstack
-shunt_([Op1|T], Acc, [Op2|TStack], OutTokens) :-
-  precedence(Op1, POp1),
-  precedence(Op2, POp2),
-  POp1 > POp2,
-  shunt_(T, Acc, [Op1,Op2|TStack], OutTokens).
+  shunt_ops_([Op1|T], Assoc, POp1, POp2, Acc, [Op2|TStack], OutTokens).
 
 % First token is a left parenthesis
 shunt_(["("|T], Acc, Stack, OutTokens) :-
@@ -97,3 +81,23 @@ shunt_([")"|T], Acc, ["("|TStack], OutTokens) :-
 % First token is a right parenthesis, head of opstack not left parenthesis
 shunt_([")"|T], Acc, [Op|TStack], OutTokens) :-
   shunt_([")"|T], [Op|Acc], TStack, OutTokens).
+
+% first token is left-associative, lower or equal precedence
+shunt_ops_([Op1|T], left, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
+  POp1 =< POp2,
+  shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
+
+% first token is left-associative, higher precedence
+shunt_ops_([Op1|T], left, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
+  POp1 > POp2,
+  shunt_(T, Acc, [Op1,Op2|TStack], OutTokens).
+
+% first token is right-associative, lower precedence
+shunt_ops_([Op1|T], right, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
+  POp1 < POp2,
+  shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
+
+% first token is right-associative, greater or equal precedence
+shunt_ops_([Op1|T], right, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
+  POp1 >= POp2,
+  shunt_(T, Acc, [Op1,Op2|TStack], OutTokens).

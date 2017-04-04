@@ -13,6 +13,9 @@ test(to_postfix_addition_with_multiplication) :-
 test(to_postfix_addition_and_mult_with_parens) :-
   to_postfix("( 3 + 4 ) * 5", "3 4 + 5 *").
 
+test(to_postfix_with_all_the_math) :-
+  to_postfix("3 + 4 * 2 / ( 1 - 5 ) ^ 2 ^ 3", "3 4 2 * 1 5 - 2 3 ^ ^ / +").
+
 :- end_tests(to_postfix).
 
 :- begin_tests(tokenize).
