@@ -17,6 +17,7 @@ detokenize([HToken|TTokens], String) :-
 
 function("sin").
 function("max").
+function("min").
 
 operator("^").
 operator("*").
@@ -108,19 +109,23 @@ shunt_([","|T], Acc, [HStack|TStack], OutTokens) :-
 % first token is left-associative, lower or equal precedence
 shunt_ops_([Op1|T], left, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
   POp1 =< POp2,
+  !,
   shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
 
 % first token is left-associative, higher precedence
 shunt_ops_([Op1|T], left, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
   POp1 > POp2,
+  !,
   shunt_(T, Acc, [Op1,Op2|TStack], OutTokens).
 
 % first token is right-associative, lower precedence
 shunt_ops_([Op1|T], right, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
   POp1 < POp2,
+  !,
   shunt_([Op1|T], [Op2|Acc], TStack, OutTokens).
 
 % first token is right-associative, greater or equal precedence
 shunt_ops_([Op1|T], right, POp1, POp2, Acc, [Op2|TStack], OutTokens) :-
   POp1 >= POp2,
+  !,
   shunt_(T, Acc, [Op1,Op2|TStack], OutTokens).
